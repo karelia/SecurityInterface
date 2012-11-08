@@ -39,9 +39,9 @@ Usage
 2. In Interface Builder, create a regular `NSSecureTextField` and then set its custom class to be `KSPasswordField`. You can also instantiate `KSPasswordField` directly like any other control
 3. Whitespace-cleanup comes for free; no extra work required
 4. To control showing the password, `KSPasswordField` has the following methods:
-	* @property(nonatomic) BOOL showsText;
-	* - (IBAction)showText:(id)sender;
-	* - (IBAction)secureText:(id)sender;
-	* - (IBAction)toggleTextShown:(id)sender;
+	* `@property(nonatomic) BOOL showsText;`
+	* `- (IBAction)showText:(id)sender;`
+	* `- (IBAction)secureText:(id)sender;`
+	* `- (IBAction)toggleTextShown:(id)sender;`
 
 I generally prefer to hook up a checkbox (`NSButton`) straight to the `toggleTextShown:` action
