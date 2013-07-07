@@ -4,6 +4,7 @@ Features
 Presently, SecurityInterface has a whopping one class: `KSPasswordField`. It:
 
 * Shows the password in plain text on-demand
+* On the basis that password visibility is likely being toggled for editing, makes the field the first responder
 * Automatically cleans up likely unwanted whitespace when pasting or dragging in passwords
 
 Contact
