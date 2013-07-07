@@ -25,9 +25,13 @@
 {
   @private
     BOOL    _showsText;
+    BOOL    _becomesFirstResponderWhenToggled;
 }
 
 @property(nonatomic) BOOL showsText;
+// Defaults to YES, which means that whenever the password is shown or hidden, the field will try to become the first responder, ready for the user to type into it.
+// Set this to NO if you want to perform your own management of the first responder instead.
+@property(nonatomic) BOOL becomesFirstResponderWhenToggled;
 
 - (IBAction)showText:(id)sender;
 - (IBAction)secureText:(id)sender;

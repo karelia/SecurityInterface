@@ -23,6 +23,24 @@
 
 @implementation KSPasswordField
 
+- (id)initWithFrame:(NSRect)frameRect;
+{
+    if (self = [super initWithFrame:frameRect])
+    {
+        _becomesFirstResponderWhenToggled = YES;
+    }
+    return self;
+}
+
+- (id)initWithCoder:(NSCoder *)aDecoder;
+{
+    if (self = [super initWithCoder:aDecoder])
+    {
+        _becomesFirstResponderWhenToggled = YES;
+    }
+    return self;
+}
+
 #pragma mark Showing Password
 
 @synthesize showsText = _showsText;
@@ -33,6 +51,8 @@
     
     [self swapCellForOneOfClass:(showsText ? [NSTextFieldCell class] : [NSSecureTextFieldCell class])];
 }
+
+@synthesize becomesFirstResponderWhenToggled = _becomesFirstResponderWhenToggled;
 
 - (void)showText:(id)sender;
 {
@@ -73,8 +93,15 @@
     [cell release];
     
     // Restore selection
-    [self.window makeFirstResponder:self];
-    if (selection) [[self currentEditor] setSelectedRange:[selection rangeValue]];
+    if (selection)
+    {
+        [self.window makeFirstResponder:self];
+        [[self currentEditor] setSelectedRange:[selection rangeValue]];
+    }
+    else if (self.becomesFirstResponderWhenToggled)
+    {
+        [self.window makeFirstResponder:self];
+    }
 }
 
 #pragma mark - Password Cleaning Logic
