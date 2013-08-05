@@ -34,15 +34,50 @@
     BOOL    _becomesFirstResponderWhenToggled;
 }
 
+/**
+ Whether to display the password as plain text or not.
+ */
 @property(nonatomic) BOOL showsText;
-// Defaults to YES, which means that whenever the password is shown or hidden, the field will try to become the first responder, ready for the user to type into it.
-// Set this to NO if you want to perform your own management of the first responder instead.
+
+/**
+ Whether the receiver becomes first responder whenever `.showsText` changes.
+ 
+ The default is `YES`, which means that whenever the password is shown or hidden,
+ the field will try to become the first responder, ready for the user to type
+ into it. Set to `NO` if you want to perform your own management of the first
+ responder instead.
+ */
 @property(nonatomic) BOOL becomesFirstResponderWhenToggled;
 
+/**
+ Sets `.showsText` to `YES`.
+ 
+ Convenient for connecting up a "Show Password" button.
+ */
 - (IBAction)showText:(id)sender;
+
+/**
+ Sets `.showsText` to `NO`.
+ 
+ Convenient for connecting up a "Hide Password" button.
+ */
 - (IBAction)secureText:(id)sender;
+
+/**
+ Toggles the value of `.showsText`.
+ 
+ Generally connected up as the action of a "Show Password" checkbox, or some
+ kind of toggle button.
+ */
 - (IBAction)toggleTextShown:(id)sender;
 
+/**
+ Performs cleanup of a potential password by limiting to a single line, and trimming whitespace.
+ 
+ Called by `KSPasswordField` when the user pastes or drags in a string.
+ 
+ @param string The password string to be cleaned up.
+ */
 - (NSString*)cleanedPasswordForString:(NSString*)string;
 
 @end
