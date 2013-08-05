@@ -1,5 +1,5 @@
 Pod::Spec.new do |s|
-  s.name         = "SecurityInterface"
+  s.name         = "KSPasswordField"
   s.version      = "1.1"
   s.summary      = "An `NSSecureTextField` subclass that cleans up pasted passwords, and provides easy access for a 'Show Password' checkbox."
   s.homepage     = "https://github.com/karelia/SecurityInterface"
