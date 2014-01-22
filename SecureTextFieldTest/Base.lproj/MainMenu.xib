@@ -675,9 +675,9 @@
                         </connections>
                     </textField>
                     <button fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="uGE-br-ubb">
-                        <rect key="frame" x="284" y="66" width="135" height="18"/>
+                        <rect key="frame" x="284" y="66" width="119" height="18"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                        <buttonCell key="cell" type="check" title="Conceal password" bezelStyle="regularSquare" imagePosition="left" state="on" inset="2" id="1kB-2P-LAF">
+                        <buttonCell key="cell" type="check" title="Show password" bezelStyle="regularSquare" imagePosition="left" inset="2" id="1kB-2P-LAF">
                             <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
                             <font key="font" metaFont="system"/>
                         </buttonCell>
