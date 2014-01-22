@@ -90,6 +90,7 @@
     
     NSKeyedUnarchiver *unarchiver = [[NSKeyedUnarchiver alloc] initForReadingWithData:data];
     NSTextFieldCell *cell = [[cellClass alloc] initWithCoder:unarchiver];
+    cell.stringValue = [self.cell stringValue]; // restore value; secure text fields wisely don't encode it
     [unarchiver finishDecoding];
     [unarchiver release];
     [data release];
