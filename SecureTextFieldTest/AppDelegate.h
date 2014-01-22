@@ -13,7 +13,6 @@
 
 @property (assign) IBOutlet NSWindow *window;
 @property (nonatomic) NSString* password;
-@property BOOL concealPassword;
 @property (weak) IBOutlet KSPasswordField *secureTextfield;
 
 @end

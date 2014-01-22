@@ -25,14 +25,4 @@
     NSLog(@"New password: %@",password);
 }
 
--(void)setConcealPassword:(BOOL)showPassword
-{
-    self.secureTextfield.showsText = !showPassword;
-}
-
--(BOOL)concealPassword
-{
-    return !self.secureTextfield.showsText;
-}
-
 @end
