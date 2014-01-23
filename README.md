@@ -7,12 +7,14 @@ Presently, SecurityInterface has a whopping one class: `KSPasswordField`. It:
 * On the basis that password visibility is likely being toggled for editing, makes the field the first responder
 * Automatically cleans up likely unwanted whitespace when pasting or dragging in passwords
 
-Contact
-=======
+Contributors and Contact Info
+=============================
 
 I'm Mike Abdullah, of [Karelia Software](http://karelia.com). [@mikeabdullah](http://twitter.com/mikeabdullah) on Twitter.
 
 Questions about the code should be left as issues at https://github.com/karelia/SecurityInterface or message me on Twitter.
+
+Thanks to [Sebastian](https://github.com/lightforce) for the example project.
 
 Dependencies
 ============
