@@ -3,7 +3,7 @@
 //  Sandvox
 //
 //  Created by Mike Abdullah on 28/04/2012.
-//  Copyright © 2012 Karelia Software
+//  Copyright (c) 2012-2014 Karelia Software. All rights reserved.
 //
 //  Permission is hereby granted, free of charge, to any person obtaining a copy
 //  of this software and associated documentation files (the "Software"), to deal
@@ -26,6 +26,226 @@
 
 #import "KSPasswordField.h"
 
+#define YOFFSET 2
+#define STRENGTH_INSET 4
+
+
+static NSArray *sStrengthDescriptions = nil;
+static NSUInteger sMaxStrengthDescriptionWidth = 0;
+
+// Returns zero (awful) to one (awesome).  We could reject low values, warn if medium values
+float strengthOfPassword(NSString *proposedPassword)
+{
+    NSUInteger length = [proposedPassword length];  // the longer the better
+    // Not going to use enumerateSubstringsInRange with NSStringEnumerationByComposedCharacterSequences
+    // since I just want a quick and dirty measurement, and it's easier to check character-by-character
+    
+    NSUInteger numberOfLowercase = 0;
+    NSUInteger numberOfUppercase = 0;
+    NSUInteger numberOfDecimalDigit = 0;
+    NSUInteger numberOfOther = 0;
+    for (NSUInteger i = 0 ; i < length ; i++)
+    {
+        unichar aChar = [proposedPassword characterAtIndex:i];
+        if ([[NSCharacterSet lowercaseLetterCharacterSet] characterIsMember:aChar])
+        {
+            numberOfLowercase++;
+        }
+        else if ([[NSCharacterSet uppercaseLetterCharacterSet] characterIsMember:aChar])
+        {
+            numberOfUppercase++;
+        }
+        else if ([[NSCharacterSet decimalDigitCharacterSet] characterIsMember:aChar])
+        {
+            numberOfDecimalDigit++;
+        }
+        else
+        {
+            numberOfOther++;
+        }
+    }
+    NSUInteger diversity = 0;   // We'll find if it has lower-alpha, upper alpha, numeric, and other
+    if (numberOfLowercase)      diversity++;
+    if (numberOfUppercase)      diversity++;
+    if (numberOfDecimalDigit)   diversity++;
+    if (numberOfOther)          diversity++;
+    
+    // Now here's the big emperical formula, devised so that the more diverse and the longer,
+    // the better the rating.  An 8-character password with diversity of 4 is right in the middle.
+    // It's possible to have a good strength with low diversity ONLY if the password is hecka long.
+    
+    float strength = MIN(1.0f, 0.015625f * diversity * length);
+    return strength;
+}
+
+void drawMeter(NSRect bounds, float strength, NSUInteger width)
+{
+    NSColor *red    = [NSColor colorWithCalibratedHue:1.0 saturation:1.000 brightness:0.7 alpha:1.000];
+    NSColor *yellow = [NSColor colorWithCalibratedHue:0.130 saturation:1.0 brightness:1.0 alpha:1.000];
+    NSColor *green  = [NSColor colorWithCalibratedHue:0.283 saturation:0.7 brightness:0.8 alpha:1.000];
+    NSColor *gray   = [NSColor colorWithCalibratedHue:0.672 saturation:0.06 brightness:0.85 alpha:1.000];   // slight blue tinge
+    
+    CGFloat endRed, startYellow, endYellow, startGreen;
+    
+    // https://www.desmos.com/calculator/xqjscbu76v
+    
+    // We want all red up to 1.0 until about strength 0.3, then start bringing in yellow.
+    // At strength 1.0, red is just until 0.05
+    endRed      = MAX(0.0,  MIN(1.0, 0.05 - 1.4 * (strength-1)));
+    startYellow =           MIN(1.0, endRed + 0.05);        // next color comes 5% after color change
+    
+    // We want to have yellow until about 0.7, then start bringing in green.
+    // At strength 1.0, yellow is just until 0.15
+    endYellow   = MAX(0.0,  MIN(1.0, 0.15 - 2.7 * (strength-1)));
+    startGreen  =           MIN(1.0, endYellow + 0.05);     // next color comes 5% after color change
+    
+    //    NSLog(@"Strength %.2f gives us colors at %.2f and %.2f", strength, endRed, endYellow);
+    NSGradient *gradient = [[NSGradient alloc] initWithColorsAndLocations:
+                            red, 0.0,
+                            red, endRed,
+                            yellow, startYellow,
+                            yellow, endYellow,
+                            green, startGreen,
+                            green, 1.0, nil];
+    
+    NSRect rectToUse = bounds;
+    rectToUse.size.height = 5;
+    
+    // Gray background
+    [gray set];
+    [NSBezierPath fillRect:rectToUse];
+    
+    // Now the show the meter
+    CGFloat cappedWidth = MIN(rectToUse.size.width, width);
+    rectToUse.size.width = cappedWidth;
+    [gradient drawInRect:rectToUse angle:0.0];  // not enough room for rounded rect
+}
+
+void drawDescriptionOfStrength(NSRect cellFrame, float strength, NSString *descriptionOfStrength)
+{
+    NSColor *red    = [NSColor colorWithCalibratedHue:1.0 saturation:1.000 brightness:0.7 alpha:1.000];
+    NSColor *yellow = [NSColor colorWithCalibratedHue:0.130 saturation:1.0 brightness:1.0 alpha:1.000];
+    NSColor *green  = [NSColor colorWithCalibratedHue:0.283 saturation:0.7 brightness:0.8 alpha:1.000];
+
+    NSColor *textColor = strength < 0.4 ? red : (strength > 0.70 ? green : yellow);
+    [textColor set];
+    
+    NSMutableParagraphStyle* rightStyle = [[[NSMutableParagraphStyle alloc] init] autorelease];
+	[rightStyle setAlignment:NSRightTextAlignment];
+    NSDictionary *attr = [NSDictionary dictionaryWithObjectsAndKeys:
+            [NSFont systemFontOfSize:[NSFont smallSystemFontSize]], NSFontAttributeName,
+            textColor, NSForegroundColorAttributeName,
+            rightStyle,NSParagraphStyleAttributeName,
+            nil];
+    
+    NSRect descRect = cellFrame;
+    
+    descRect = NSInsetRect(descRect, STRENGTH_INSET, 8.0);
+    
+    [descriptionOfStrength drawInRect:descRect withAttributes:attr];
+  
+}
+
+
+@implementation KSPasswordTextFieldCell
+
+// =======================================================================================================
+// =======================================================================================================
+//
+//  ALL OF THIS CODE SHOULD BE COPIED TO SECTION BELOW, AND REMAIN EQUAL.
+//
+//
+
+- (void)drawInteriorWithFrame:(NSRect)cellFrame inView:(NSView *)controlView
+{
+    KSPasswordField *passwordField = ((KSPasswordField*)controlView);
+    
+    NSAttributedString *a = [passwordField attributedStringValue];
+    NSRect r = [a boundingRectWithSize:[controlView bounds].size options:0];
+    if (r.size.width) r.size.width += 3;      // extra to compensate for margin starting to left of actual text
+    
+    drawMeter(cellFrame, passwordField.strength, r.size.width);
+    drawDescriptionOfStrength(cellFrame, passwordField.strength, passwordField.descriptionOfStrength);
+
+    cellFrame.origin.y += YOFFSET;
+    cellFrame.size.height -= YOFFSET;
+    [super drawInteriorWithFrame:cellFrame inView:controlView];
+}
+
+- (NSRect)drawingRectForBounds:(NSRect)aRect {
+    aRect = [super drawingRectForBounds:aRect];
+    aRect.origin.y += YOFFSET;
+    aRect.size.height -= YOFFSET;
+    aRect.size.width -= (sMaxStrengthDescriptionWidth + STRENGTH_INSET);	// leave room for drawing strength description
+    return aRect;
+}
+
+- (void)selectWithFrame:(NSRect)aRect inView:(NSView *)controlView editor:(NSText *)textObj delegate:(id)anObject start:(NSInteger)selStart length:(NSInteger)selLength
+{
+    aRect.origin.y += YOFFSET;
+    aRect.size.height -= YOFFSET;
+    [super selectWithFrame:aRect inView: controlView editor:textObj delegate:anObject start:selStart length:selLength];
+}
+
+- (void)editWithFrame:(NSRect)aRect inView:(NSView *)controlView editor:(NSText *)textObj delegate:(id)anObject event:(NSEvent *)theEvent
+{
+    aRect.origin.y += YOFFSET;
+    aRect.size.height -= YOFFSET;
+    [super editWithFrame: aRect inView: controlView editor:textObj delegate:anObject event: theEvent];
+}
+
+@end
+
+@implementation KSPasswordSecureTextFieldCell
+
+// =======================================================================================================
+// =======================================================================================================
+//
+//  ALL OF THIS CODE SHOULD BE COPIED FROM SECTION ABOVE, AND REMAIN EQUAL.
+//
+// =======================================================================================================
+// =======================================================================================================
+
+- (void)drawInteriorWithFrame:(NSRect)cellFrame inView:(NSView *)controlView
+{
+    KSPasswordField *passwordField = ((KSPasswordField*)controlView);
+    
+    NSAttributedString *a = [passwordField attributedStringValue];
+    NSRect r = [a boundingRectWithSize:[controlView bounds].size options:0];
+    if (r.size.width) r.size.width += 3;      // extra to compensate for margin starting to left of actual text
+    
+    drawMeter(cellFrame, passwordField.strength, r.size.width);
+    drawDescriptionOfStrength(cellFrame, passwordField.strength, passwordField.descriptionOfStrength);
+    
+    cellFrame.origin.y += YOFFSET;
+    cellFrame.size.height -= YOFFSET;
+    [super drawInteriorWithFrame:cellFrame inView:controlView];
+}
+
+- (NSRect)drawingRectForBounds:(NSRect)aRect {
+    aRect = [super drawingRectForBounds:aRect];
+    aRect.origin.y += YOFFSET;
+    aRect.size.height -= YOFFSET;
+    aRect.size.width -= (sMaxStrengthDescriptionWidth + STRENGTH_INSET);	// leave room for drawing strength description
+    return aRect;
+}
+
+- (void)selectWithFrame:(NSRect)aRect inView:(NSView *)controlView editor:(NSText *)textObj delegate:(id)anObject start:(NSInteger)selStart length:(NSInteger)selLength
+{
+    aRect.origin.y += YOFFSET;
+    aRect.size.height -= YOFFSET;
+    [super selectWithFrame:aRect inView: controlView editor:textObj delegate:anObject start:selStart length:selLength];
+}
+
+- (void)editWithFrame:(NSRect)aRect inView:(NSView *)controlView editor:(NSText *)textObj delegate:(id)anObject event:(NSEvent *)theEvent
+{
+    aRect.origin.y += YOFFSET;
+    aRect.size.height -= YOFFSET;
+    [super editWithFrame: aRect inView: controlView editor:textObj delegate:anObject event: theEvent];
+}
+
+@end
+
 
 @implementation KSPasswordField
 
@@ -47,6 +267,51 @@
     return self;
 }
 
+@synthesize showStrength = _showStrength;
+@synthesize strength = _strength;
+@synthesize length = _length;
+@synthesize descriptionOfStrength = _descriptionOfStrength;
+
++ (Class)cellClass;
+{
+    return [KSPasswordSecureTextFieldCell class];
+}
+
++ (void)initialize
+{
+    NSArray *strengthDescriptions = @[
+                                      NSLocalizedString(@"weak", @"description of (strength of) password"),
+                                      NSLocalizedString(@"fair", @"description of (strength of) password. OK but not great."),
+                                      NSLocalizedString(@"strong", @"description of (strength of) password")];
+    sStrengthDescriptions = [strengthDescriptions retain];
+    
+    
+    NSDictionary *attr = [NSDictionary dictionaryWithObjectsAndKeys:
+                          [NSFont systemFontOfSize:[NSFont smallSystemFontSize]], NSFontAttributeName,
+                          nil];
+    for ( NSString *desc in sStrengthDescriptions)
+    {
+        NSAttributedString *a = [[NSMutableAttributedString alloc] initWithString:desc attributes:attr];
+        NSRect r = [a boundingRectWithSize:NSZeroSize options:0];
+        if (r.size.width > sMaxStrengthDescriptionWidth) sMaxStrengthDescriptionWidth = ceilf(r.size.width);
+    }
+}
+
+
+
+
+#pragma mark strength-o-meter
+
+
+
+- (void) setStrength:(float)strength length:(NSUInteger)length;
+{
+    self.strength = strength;
+    self.length = length;
+    [self setNeedsDisplay:YES];
+}
+
+
 #pragma mark Showing Password
 
 @synthesize showsText = _showsText;
@@ -55,7 +320,15 @@
     if (showsText == _showsText) return;
     _showsText = showsText;
     
-    [self swapCellForOneOfClass:(showsText ? [NSTextFieldCell class] : [NSSecureTextFieldCell class])];
+    if (self.showStrength)
+    {
+        [self swapCellForOneOfClass:(showsText ? [KSPasswordTextFieldCell class] : [KSPasswordSecureTextFieldCell class])];
+    }
+    else
+    {
+        [self swapCellForOneOfClass:(showsText ? [NSTextFieldCell class] : [NSSecureTextFieldCell class])];
+    }
+    
 }
 
 @synthesize becomesFirstResponderWhenToggled = _becomesFirstResponderWhenToggled;
@@ -159,5 +432,109 @@
     
     return shouldChange;
 }
+
+#pragma mark Password strength
+
+// Returns zero (awful) to one (awesome).  We could reject low values, warn if medium values
+- (float) strengthOfPassword:(NSString *)proposedPassword;
+{
+    NSUInteger length = [proposedPassword length];  // the longer the better
+    // Not going to use enumerateSubstringsInRange with NSStringEnumerationByComposedCharacterSequences
+    // since I just want a quick and dirty measurement, and it's easier to check character-by-character
+    
+    NSUInteger numberOfLowercase = 0;
+    NSUInteger numberOfUppercase = 0;
+    NSUInteger numberOfDecimalDigit = 0;
+    NSUInteger numberOfOther = 0;
+    for (NSUInteger i = 0 ; i < length ; i++)
+    {
+        unichar aChar = [proposedPassword characterAtIndex:i];
+        if ([[NSCharacterSet lowercaseLetterCharacterSet] characterIsMember:aChar])
+        {
+            numberOfLowercase++;
+        }
+        else if ([[NSCharacterSet uppercaseLetterCharacterSet] characterIsMember:aChar])
+        {
+            numberOfUppercase++;
+        }
+        else if ([[NSCharacterSet decimalDigitCharacterSet] characterIsMember:aChar])
+        {
+            numberOfDecimalDigit++;
+        }
+        else
+        {
+            numberOfOther++;
+        }
+    }
+    NSUInteger diversity = 0;   // We'll find if it has lower-alpha, upper alpha, numeric, and other
+    if (numberOfLowercase)      diversity++;
+    if (numberOfUppercase)      diversity++;
+    if (numberOfDecimalDigit)   diversity++;
+    if (numberOfOther)          diversity++;
+ 
+    // Give another point if we have a good number of unique characters in the whole (longish) string
+
+    NSMutableSet *allChars = [NSMutableSet set];
+    [proposedPassword enumerateSubstringsInRange:NSMakeRange(0, [proposedPassword length])
+                                         options:NSStringEnumerationByComposedCharacterSequences
+                                      usingBlock:^(NSString *substring, NSRange substringRange, NSRange enclosingRange, BOOL *stop){
+                                          [allChars addObject:substring];
+                                      }];
+    if ( [proposedPassword length] >= 12 && (float)[allChars count] / (float)[proposedPassword length] > 0.4 )
+    {
+        diversity++;
+    }
+    
+    if (NSClassFromString(@"NSRegularExpression"))      // 10.7 up, so ignore if not on 10.7)
+    {
+        // Look for repetition: 4 or more characters, repeated - if so, reduce the diversity
+
+        NSError *error = NULL;
+        NSRegularExpression *regex = [NSRegularExpression regularExpressionWithPattern:@"(.{4,}).*\\1"  // 4 or more characters, then anything, then that same group of characters
+                                                                               options:NSRegularExpressionCaseInsensitive
+                                                                                 error:&error];
+        
+        if (!error)
+        {
+            NSUInteger numberOfMatches = [regex numberOfMatchesInString:proposedPassword
+                                                                    options:0
+                                                                      range:NSMakeRange(0, [proposedPassword length])];
+            if (numberOfMatches > 0)
+            {
+                diversity--;    // Might go as low as zero.
+            }
+        }
+    }
+    
+    // Possible enhancement:  Penalize for ordered sequences like ABCDEFGHI…, 123456789, QWERTY, etc.
+    
+    
+    // Now here's the big emperical formula, devised so that the more diverse and the longer,
+    // the better the rating.  An 8-character password with diversity of 4 is right in the middle.
+    // It's possible to have a good strength with low diversity ONLY if the password is hecka long.
+    
+    float strength = MIN(1.0f, 0.015625f * diversity * length);
+    return strength;
+}
+
+- (void)textDidChange:(NSNotification *)aNotification
+{
+    if (self.showStrength)
+    {
+        NSString    *string = [self stringValue];
+        float strength = [self strengthOfPassword:string];
+        
+        BOOL visible = ![@"" isEqualToString:string];
+        
+        if (visible)
+        {
+            NSUInteger strengthIndex =
+                strength < 0.4 ? 0 : (strength > 0.70 ? 2 : 1);
+            self.descriptionOfStrength = [sStrengthDescriptions objectAtIndex:strengthIndex];
+        }
+        [self setStrength:strength length:[string length]];
+    }
+}
+
 
 @end

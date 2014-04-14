@@ -3,7 +3,7 @@
 //  Sandvox
 //
 //  Created by Mike Abdullah on 28/04/2012.
-//  Copyright © 2012 Karelia Software
+//  Copyright (c) 2012-2014 Karelia Software. All rights reserved.
 //
 //  Permission is hereby granted, free of charge, to any person obtaining a copy
 //  of this software and associated documentation files (the "Software"), to deal
@@ -32,12 +32,23 @@
   @private
     BOOL    _showsText;
     BOOL    _becomesFirstResponderWhenToggled;
+    BOOL    _showStrength;
+    float   _strength;
+    NSUInteger _length;
+    NSString *_descriptionOfStrength;
 }
+
+
+@property(nonatomic) BOOL showStrength;
 
 /**
  Whether to display the password as plain text or not.
  */
 @property(nonatomic) BOOL showsText;
+
+@property (nonatomic, assign) float strength;
+@property (nonatomic, assign) NSUInteger length;
+@property (nonatomic, copy) NSString *descriptionOfStrength;
 
 /**
  Whether the receiver becomes first responder whenever `.showsText` changes.
@@ -80,4 +91,14 @@
  */
 - (NSString*)cleanedPasswordForString:(NSString*)string;
 
+
+- (void) setStrength:(float)strength length:(NSUInteger)length;
+
+@end
+
+
+@interface KSPasswordTextFieldCell : NSTextFieldCell
+@end
+
+@interface KSPasswordSecureTextFieldCell : NSSecureTextFieldCell
 @end
