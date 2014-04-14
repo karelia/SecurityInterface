@@ -124,7 +124,7 @@ void drawMeter(NSRect bounds, float strength, NSUInteger width)
 void drawDescriptionOfStrength(NSRect cellFrame, float strength, NSString *descriptionOfStrength)
 {
     NSColor *red    = [NSColor colorWithCalibratedHue:1.0 saturation:1.000 brightness:0.7 alpha:1.000];
-    NSColor *yellow = [NSColor colorWithCalibratedHue:0.130 saturation:1.0 brightness:1.0 alpha:1.000];
+    NSColor *yellow = [NSColor colorWithCalibratedHue:0.130 saturation:1.0 brightness:0.7 alpha:1.000];     // Less bright than meter color!
     NSColor *green  = [NSColor colorWithCalibratedHue:0.283 saturation:0.7 brightness:0.8 alpha:1.000];
 
     NSColor *textColor = strength < 0.4 ? red : (strength > 0.70 ? green : yellow);
@@ -140,12 +140,41 @@ void drawDescriptionOfStrength(NSRect cellFrame, float strength, NSString *descr
     
     NSRect descRect = cellFrame;
     
-    descRect = NSInsetRect(descRect, STRENGTH_INSET, 8.0);
+    descRect = NSInsetRect(descRect, STRENGTH_INSET, 0.0);
+    descRect.origin.y += 8;
     
     [descriptionOfStrength drawInRect:descRect withAttributes:attr];
-  
 }
 
+void drawMeterAndStrength(NSRect cellFrame, NSView *controlView)
+{
+    KSPasswordField *passwordField = ((KSPasswordField*)controlView);
+    
+    NSAttributedString *a = [passwordField attributedStringValue];
+    NSRect r = NSZeroRect;
+    if (passwordField.showsText)
+    {
+        r = [a boundingRectWithSize:[controlView bounds].size options:0];
+    }
+    else    // get width of bullets
+    {
+        NSUInteger strlength = [[passwordField stringValue] length];
+        if (strlength)
+        {
+            NSDictionary *attr = [a attributesAtIndex:0 effectiveRange:nil];
+            NSAttributedString *oneBullet = [[NSAttributedString alloc] initWithString:@"•" attributes:attr];
+            r = [oneBullet boundingRectWithSize:[controlView bounds].size options:0];
+            r.size.width *= strlength;
+        }
+    }
+    if (r.size.width) r.size.width += 3;      // extra to compensate for margin starting to left of actual text
+    
+    drawMeter(cellFrame, passwordField.strength, r.size.width);
+    drawDescriptionOfStrength(cellFrame, passwordField.strength, passwordField.descriptionOfStrength);
+}
+
+
+#define OFFSET_ARECT aRect.origin.y += YOFFSET; aRect.size.height -= YOFFSET
 
 @implementation KSPasswordTextFieldCell
 
@@ -158,15 +187,7 @@ void drawDescriptionOfStrength(NSRect cellFrame, float strength, NSString *descr
 
 - (void)drawInteriorWithFrame:(NSRect)cellFrame inView:(NSView *)controlView
 {
-    KSPasswordField *passwordField = ((KSPasswordField*)controlView);
-    
-    NSAttributedString *a = [passwordField attributedStringValue];
-    NSRect r = [a boundingRectWithSize:[controlView bounds].size options:0];
-    if (r.size.width) r.size.width += 3;      // extra to compensate for margin starting to left of actual text
-    
-    drawMeter(cellFrame, passwordField.strength, r.size.width);
-    drawDescriptionOfStrength(cellFrame, passwordField.strength, passwordField.descriptionOfStrength);
-
+    drawMeterAndStrength(cellFrame, controlView);
     cellFrame.origin.y += YOFFSET;
     cellFrame.size.height -= YOFFSET;
     [super drawInteriorWithFrame:cellFrame inView:controlView];
@@ -174,23 +195,20 @@ void drawDescriptionOfStrength(NSRect cellFrame, float strength, NSString *descr
 
 - (NSRect)drawingRectForBounds:(NSRect)aRect {
     aRect = [super drawingRectForBounds:aRect];
-    aRect.origin.y += YOFFSET;
-    aRect.size.height -= YOFFSET;
+    OFFSET_ARECT;
     aRect.size.width -= (sMaxStrengthDescriptionWidth + STRENGTH_INSET);	// leave room for drawing strength description
     return aRect;
 }
 
 - (void)selectWithFrame:(NSRect)aRect inView:(NSView *)controlView editor:(NSText *)textObj delegate:(id)anObject start:(NSInteger)selStart length:(NSInteger)selLength
 {
-    aRect.origin.y += YOFFSET;
-    aRect.size.height -= YOFFSET;
+    OFFSET_ARECT;
     [super selectWithFrame:aRect inView: controlView editor:textObj delegate:anObject start:selStart length:selLength];
 }
 
 - (void)editWithFrame:(NSRect)aRect inView:(NSView *)controlView editor:(NSText *)textObj delegate:(id)anObject event:(NSEvent *)theEvent
 {
-    aRect.origin.y += YOFFSET;
-    aRect.size.height -= YOFFSET;
+    OFFSET_ARECT;
     [super editWithFrame: aRect inView: controlView editor:textObj delegate:anObject event: theEvent];
 }
 
@@ -208,15 +226,7 @@ void drawDescriptionOfStrength(NSRect cellFrame, float strength, NSString *descr
 
 - (void)drawInteriorWithFrame:(NSRect)cellFrame inView:(NSView *)controlView
 {
-    KSPasswordField *passwordField = ((KSPasswordField*)controlView);
-    
-    NSAttributedString *a = [passwordField attributedStringValue];
-    NSRect r = [a boundingRectWithSize:[controlView bounds].size options:0];
-    if (r.size.width) r.size.width += 3;      // extra to compensate for margin starting to left of actual text
-    
-    drawMeter(cellFrame, passwordField.strength, r.size.width);
-    drawDescriptionOfStrength(cellFrame, passwordField.strength, passwordField.descriptionOfStrength);
-    
+    drawMeterAndStrength(cellFrame, controlView);
     cellFrame.origin.y += YOFFSET;
     cellFrame.size.height -= YOFFSET;
     [super drawInteriorWithFrame:cellFrame inView:controlView];
@@ -224,23 +234,20 @@ void drawDescriptionOfStrength(NSRect cellFrame, float strength, NSString *descr
 
 - (NSRect)drawingRectForBounds:(NSRect)aRect {
     aRect = [super drawingRectForBounds:aRect];
-    aRect.origin.y += YOFFSET;
-    aRect.size.height -= YOFFSET;
+    OFFSET_ARECT;
     aRect.size.width -= (sMaxStrengthDescriptionWidth + STRENGTH_INSET);	// leave room for drawing strength description
     return aRect;
 }
 
 - (void)selectWithFrame:(NSRect)aRect inView:(NSView *)controlView editor:(NSText *)textObj delegate:(id)anObject start:(NSInteger)selStart length:(NSInteger)selLength
 {
-    aRect.origin.y += YOFFSET;
-    aRect.size.height -= YOFFSET;
+    OFFSET_ARECT;
     [super selectWithFrame:aRect inView: controlView editor:textObj delegate:anObject start:selStart length:selLength];
 }
 
 - (void)editWithFrame:(NSRect)aRect inView:(NSView *)controlView editor:(NSText *)textObj delegate:(id)anObject event:(NSEvent *)theEvent
 {
-    aRect.origin.y += YOFFSET;
-    aRect.size.height -= YOFFSET;
+    OFFSET_ARECT;
     [super editWithFrame: aRect inView: controlView editor:textObj delegate:anObject event: theEvent];
 }
 
@@ -274,7 +281,7 @@ void drawDescriptionOfStrength(NSRect cellFrame, float strength, NSString *descr
 
 + (Class)cellClass;
 {
-    return [KSPasswordSecureTextFieldCell class];
+    return [KSPasswordSecureTextFieldCell class];       // Really just a guess; you may need to set this appropriately from code.
 }
 
 + (void)initialize
@@ -291,7 +298,7 @@ void drawDescriptionOfStrength(NSRect cellFrame, float strength, NSString *descr
                           nil];
     for ( NSString *desc in sStrengthDescriptions)
     {
-        NSAttributedString *a = [[NSMutableAttributedString alloc] initWithString:desc attributes:attr];
+        NSAttributedString *a = [[[NSMutableAttributedString alloc] initWithString:desc attributes:attr] autorelease];
         NSRect r = [a boundingRectWithSize:NSZeroSize options:0];
         if (r.size.width > sMaxStrengthDescriptionWidth) sMaxStrengthDescriptionWidth = ceilf(r.size.width);
     }
@@ -317,7 +324,6 @@ void drawDescriptionOfStrength(NSRect cellFrame, float strength, NSString *descr
 @synthesize showsText = _showsText;
 - (void)setShowsText:(BOOL)showsText;
 {
-    if (showsText == _showsText) return;
     _showsText = showsText;
     
     if (self.showStrength)
