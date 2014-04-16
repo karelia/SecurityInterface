@@ -167,7 +167,7 @@ void drawMeterAndStrength(NSRect cellFrame, NSView *controlView)
             r.size.width *= strlength;
         }
     }
-    if (r.size.width) r.size.width += 3;      // extra to compensate for margin starting to left of actual text
+    if (r.size.width) r.size.width += 5;      // extra to compensate for margin starting to left of actual text
     
     drawMeter(cellFrame, passwordField.strength, r.size.width);
     drawDescriptionOfStrength(cellFrame, passwordField.strength, passwordField.descriptionOfStrength);
@@ -281,7 +281,7 @@ void drawMeterAndStrength(NSRect cellFrame, NSView *controlView)
 
 + (Class)cellClass;
 {
-    return [KSPasswordSecureTextFieldCell class];       // Really just a guess; you may need to set this appropriately from code.
+    return [NSSecureTextFieldCell class];       // Really just a guess; set to the right subclass from code later.
 }
 
 + (void)initialize
