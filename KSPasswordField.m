@@ -540,6 +540,16 @@ void drawMeterAndStrength(NSRect cellFrame, NSView *controlView)
         }
         [self setStrength:strength length:[string length]];
     }
+    
+    // Password fields don't seem to send out continuous binding updates, nor NSControlTextDidChangeNotification.
+    // https://developer.apple.com/library/mac/documentation/cocoa/reference/applicationkit/classes/NSControl_Class/Reference/Reference.html#//apple_ref/c/data/NSControlTextDidChangeNotification
+    // So we're doing that manually.
+    
+    NSNotification *newNotif = [NSNotification notificationWithName:NSControlTextDidChangeNotification
+    object:self
+    userInfo: @{ @"NSFieldEditor" : [self.window fieldEditor:NO forObject:self] }
+        ];
+    [[NSNotificationCenter defaultCenter] postNotification:newNotif];
 }
 
 
