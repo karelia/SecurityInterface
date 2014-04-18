@@ -218,16 +218,19 @@ NSRect drawAdornments(NSRect cellFrame, NSView *controlView)
 - (NSRect)drawingRectForBounds:(NSRect)aRect
 {
     NSRect result = [super drawingRectForBounds:aRect];
-    if ([((KSPasswordField *)[self controlView]) showStrength])
+    KSPasswordField *field = (KSPasswordField *)[self controlView];
+
+    if ([field showStrength])
     {
         result.origin.y += YOFFSET;
         result.size.height -= YOFFSET;
         result.size.width -= (sMaxStrengthDescriptionWidth + STRENGTH_INSET);	// leave room for drawing strength description
     }
-    else if (HIDE_MATCH != [((KSPasswordField *)[self controlView]) matching])
+    else if ([field showMatchIndicator])
     {
-        result.size.width -= (16+2);	// leave room for drawing indicator
+        result.size.width -= (16 + 2);	// leave room for drawing indicator
     }
+
     return result;
 }
 
@@ -275,27 +278,18 @@ NSRect drawAdornments(NSRect cellFrame, NSView *controlView)
 {
     NSRect result = [super drawingRectForBounds:aRect];
     KSPasswordField *field = (KSPasswordField *)[self controlView];
-    if (YES || [field showStrength])
-    {
-    
-        // THIS IS CRAZY.  If I put in the YES || here, then the width is reduced enough to see the lozenge.
-        // But if I let the clause below match, even if it runs the SAME code to reduce the width, then I don't see the width.
-        
-        // Possible weird clue: The debugger is showing no values for aRect.  WTF?
-    
-    
-    
-        result.origin.y += YOFFSET;
-        result.size.height -= YOFFSET;
-        result.size.width -= (sMaxStrengthDescriptionWidth + STRENGTH_INSET);	// leave room for drawing strength description
-    }
-    else if (HIDE_MATCH != [field matching])
+
+    if ([field showStrength])
     {
         result.origin.y += YOFFSET;
         result.size.height -= YOFFSET;
         result.size.width -= (sMaxStrengthDescriptionWidth + STRENGTH_INSET);	// leave room for drawing strength description
-        // result.size.width -= (16+2);	// leave room for drawing indicator
     }
+    else if ([field showMatchIndicator])
+    {
+        result.size.width -= (16 + 2);	// leave room for drawing indicator
+    }
+
     return result;
 }
 
@@ -345,6 +339,7 @@ NSRect drawAdornments(NSRect cellFrame, NSView *controlView)
 }
 
 @synthesize showStrength = _showStrength;
+@synthesize showMatchIndicator = _showMatchIndicator;
 @synthesize strength = _strength;
 @synthesize length = _length;
 @synthesize matching = _matching;

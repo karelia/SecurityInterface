@@ -34,6 +34,7 @@ typedef NS_ENUM(NSInteger, MATCHING) { HIDE_MATCH = 0, DOESNT_MATCH, PARTIAL_MAT
     BOOL    _showsText;
     BOOL    _becomesFirstResponderWhenToggled;
     BOOL    _showStrength;
+    BOOL    _showMatchIndicator;
     float   _strength;
     NSUInteger _length;
     MATCHING _matching;
@@ -42,6 +43,7 @@ typedef NS_ENUM(NSInteger, MATCHING) { HIDE_MATCH = 0, DOESNT_MATCH, PARTIAL_MAT
 
 
 @property(nonatomic) BOOL showStrength;
+@property(nonatomic) BOOL showMatchIndicator;
 
 /**
  Whether to display the password as plain text or not.
