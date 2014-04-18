@@ -148,23 +148,24 @@ void drawDescriptionOfStrength(NSRect cellFrame, float strength, NSString *descr
 
 void drawMatch(NSRect cellFrame, MATCHING matching)
 {
-    if (matching)   // is there matching status to draw?
+    NSRect drawFrame = NSMakeRect(NSMaxX(cellFrame)-16-2, 3, 16, 16);
+    NSString *imageName = nil;
+    switch (matching) {
+        case DOESNT_MATCH: imageName = NSImageNameStatusUnavailable; break;
+        case PARTIAL_MATCH: imageName = NSImageNameStatusPartiallyAvailable; break;
+        case FULL_MATCH: imageName = NSImageNameStatusAvailable; break;
+        default: break;
+    }
+    if (imageName)
     {
-        NSString *imageName;
-        switch (matching) {
-            case DOESNT_MATCH: imageName = NSImageNameStatusUnavailable; break;
-            case PARTIAL_MATCH: imageName = NSImageNameStatusPartiallyAvailable; break;
-            default:
-            case FULL_MATCH: imageName = NSImageNameStatusAvailable; break;
-        }
         NSImage *indicator = [NSImage imageNamed:imageName];
-        
-        [indicator drawInRect:NSMakeRect(NSMaxX(cellFrame)-16-2, 3, 16, 16) fromRect:NSZeroRect operation:NSCompositeSourceOver fraction:1.0 respectFlipped:YES hints:nil];
+        [indicator drawInRect:drawFrame fromRect:NSZeroRect operation:NSCompositeSourceOver fraction:1.0 respectFlipped:YES hints:nil];
     }
 }
 
 NSRect drawAdornments(NSRect cellFrame, NSView *controlView)
 {
+	NSRect result = cellFrame;
     KSPasswordField *passwordField = ((KSPasswordField*)controlView);
     if (passwordField.showStrength)
     {
@@ -190,17 +191,14 @@ NSRect drawAdornments(NSRect cellFrame, NSView *controlView)
         drawMeter(cellFrame, passwordField.strength, r.size.width);
         drawDescriptionOfStrength(cellFrame, passwordField.strength, passwordField.descriptionOfStrength);
 
-        cellFrame.origin.y += YOFFSET;
-        cellFrame.size.height -= YOFFSET;
+        result.origin.y += YOFFSET;
+        result.size.height -= YOFFSET;
 
     }
-    drawMatch(cellFrame, passwordField.matching);
+    drawMatch(result, passwordField.matching);
     
-    return cellFrame;
+    return result;
 }
-
-
-#define OFFSET_ARECT aRect.origin.y += YOFFSET; aRect.size.height -= YOFFSET
 
 @implementation KSPasswordTextFieldCell
 
@@ -217,23 +215,42 @@ NSRect drawAdornments(NSRect cellFrame, NSView *controlView)
     [super drawInteriorWithFrame:cellFrame inView:controlView];
 }
 
-- (NSRect)drawingRectForBounds:(NSRect)aRect {
-    aRect = [super drawingRectForBounds:aRect];
-    OFFSET_ARECT;
-    aRect.size.width -= (sMaxStrengthDescriptionWidth + STRENGTH_INSET);	// leave room for drawing strength description
-    return aRect;
+- (NSRect)drawingRectForBounds:(NSRect)aRect
+{
+    NSRect result = [super drawingRectForBounds:aRect];
+    if ([((KSPasswordField *)[self controlView]) showStrength])
+    {
+        result.origin.y += YOFFSET;
+        result.size.height -= YOFFSET;
+        result.size.width -= (sMaxStrengthDescriptionWidth + STRENGTH_INSET);	// leave room for drawing strength description
+    }
+    else if (HIDE_MATCH != [((KSPasswordField *)[self controlView]) matching])
+    {
+        result.size.width -= (16+2);	// leave room for drawing indicator
+    }
+    return result;
 }
 
 - (void)selectWithFrame:(NSRect)aRect inView:(NSView *)controlView editor:(NSText *)textObj delegate:(id)anObject start:(NSInteger)selStart length:(NSInteger)selLength
 {
-    OFFSET_ARECT;
-    [super selectWithFrame:aRect inView: controlView editor:textObj delegate:anObject start:selStart length:selLength];
+    NSRect result = aRect;
+    if ([((KSPasswordField *)[self controlView]) showStrength])
+    {
+        result.origin.y += YOFFSET;
+        result.size.height -= YOFFSET;
+    }
+    [super selectWithFrame:result inView: controlView editor:textObj delegate:anObject start:selStart length:selLength];
 }
 
 - (void)editWithFrame:(NSRect)aRect inView:(NSView *)controlView editor:(NSText *)textObj delegate:(id)anObject event:(NSEvent *)theEvent
 {
-    OFFSET_ARECT;
-    [super editWithFrame: aRect inView: controlView editor:textObj delegate:anObject event: theEvent];
+    NSRect result = aRect;
+    if ([((KSPasswordField *)[self controlView]) showStrength])
+    {
+        result.origin.y += YOFFSET;
+        result.size.height -= YOFFSET;
+    }
+    [super editWithFrame:result inView: controlView editor:textObj delegate:anObject event: theEvent];
 }
 
 @end
@@ -250,29 +267,58 @@ NSRect drawAdornments(NSRect cellFrame, NSView *controlView)
 
 - (void)drawInteriorWithFrame:(NSRect)cellFrame inView:(NSView *)controlView
 {
-    drawAdornments(cellFrame, controlView);
-    cellFrame.origin.y += YOFFSET;
-    cellFrame.size.height -= YOFFSET;
+    cellFrame = drawAdornments(cellFrame, controlView);
     [super drawInteriorWithFrame:cellFrame inView:controlView];
 }
 
-- (NSRect)drawingRectForBounds:(NSRect)aRect {
-    aRect = [super drawingRectForBounds:aRect];
-    OFFSET_ARECT;
-    aRect.size.width -= (sMaxStrengthDescriptionWidth + STRENGTH_INSET);	// leave room for drawing strength description
-    return aRect;
+- (NSRect)drawingRectForBounds:(NSRect)aRect
+{
+    NSRect result = [super drawingRectForBounds:aRect];
+    KSPasswordField *field = (KSPasswordField *)[self controlView];
+    if (YES || [field showStrength])
+    {
+    
+        // THIS IS CRAZY.  If I put in the YES || here, then the width is reduced enough to see the lozenge.
+        // But if I let the clause below match, even if it runs the SAME code to reduce the width, then I don't see the width.
+        
+        // Possible weird clue: The debugger is showing no values for aRect.  WTF?
+    
+    
+    
+        result.origin.y += YOFFSET;
+        result.size.height -= YOFFSET;
+        result.size.width -= (sMaxStrengthDescriptionWidth + STRENGTH_INSET);	// leave room for drawing strength description
+    }
+    else if (HIDE_MATCH != [field matching])
+    {
+        result.origin.y += YOFFSET;
+        result.size.height -= YOFFSET;
+        result.size.width -= (sMaxStrengthDescriptionWidth + STRENGTH_INSET);	// leave room for drawing strength description
+        // result.size.width -= (16+2);	// leave room for drawing indicator
+    }
+    return result;
 }
 
 - (void)selectWithFrame:(NSRect)aRect inView:(NSView *)controlView editor:(NSText *)textObj delegate:(id)anObject start:(NSInteger)selStart length:(NSInteger)selLength
 {
-    OFFSET_ARECT;
-    [super selectWithFrame:aRect inView: controlView editor:textObj delegate:anObject start:selStart length:selLength];
+    NSRect result = aRect;
+    if ([((KSPasswordField *)[self controlView]) showStrength])
+    {
+        result.origin.y += YOFFSET;
+        result.size.height -= YOFFSET;
+    }
+    [super selectWithFrame:result inView: controlView editor:textObj delegate:anObject start:selStart length:selLength];
 }
 
 - (void)editWithFrame:(NSRect)aRect inView:(NSView *)controlView editor:(NSText *)textObj delegate:(id)anObject event:(NSEvent *)theEvent
 {
-    OFFSET_ARECT;
-    [super editWithFrame: aRect inView: controlView editor:textObj delegate:anObject event: theEvent];
+    NSRect result = aRect;
+    if ([((KSPasswordField *)[self controlView]) showStrength])
+    {
+        result.origin.y += YOFFSET;
+        result.size.height -= YOFFSET;
+    }
+    [super editWithFrame:result inView: controlView editor:textObj delegate:anObject event: theEvent];
 }
 
 @end
