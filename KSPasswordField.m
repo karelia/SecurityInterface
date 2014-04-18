@@ -146,31 +146,57 @@ void drawDescriptionOfStrength(NSRect cellFrame, float strength, NSString *descr
     [descriptionOfStrength drawInRect:descRect withAttributes:attr];
 }
 
-void drawMeterAndStrength(NSRect cellFrame, NSView *controlView)
+void drawMatch(NSRect cellFrame, MATCHING matching)
+{
+    if (matching)   // is there matching status to draw?
+    {
+        NSString *imageName;
+        switch (matching) {
+            case DOESNT_MATCH: imageName = NSImageNameStatusUnavailable; break;
+            case PARTIAL_MATCH: imageName = NSImageNameStatusPartiallyAvailable; break;
+            default:
+            case FULL_MATCH: imageName = NSImageNameStatusAvailable; break;
+        }
+        NSImage *indicator = [NSImage imageNamed:imageName];
+        
+        [indicator drawInRect:NSMakeRect(NSMaxX(cellFrame)-16-2, 3, 16, 16) fromRect:NSZeroRect operation:NSCompositeSourceOver fraction:1.0 respectFlipped:YES hints:nil];
+    }
+}
+
+NSRect drawAdornments(NSRect cellFrame, NSView *controlView)
 {
     KSPasswordField *passwordField = ((KSPasswordField*)controlView);
-    
-    NSAttributedString *a = [passwordField attributedStringValue];
-    NSRect r = NSZeroRect;
-    if (passwordField.showsText)
+    if (passwordField.showStrength)
     {
-        r = [a boundingRectWithSize:[controlView bounds].size options:0];
-    }
-    else    // get width of bullets
-    {
-        NSUInteger strlength = [[passwordField stringValue] length];
-        if (strlength)
+        NSAttributedString *a = [passwordField attributedStringValue];
+        NSRect r = NSZeroRect;
+        if (passwordField.showsText)
         {
-            NSDictionary *attr = [a attributesAtIndex:0 effectiveRange:nil];
-            NSAttributedString *oneBullet = [[NSAttributedString alloc] initWithString:@"•" attributes:attr];
-            r = [oneBullet boundingRectWithSize:[controlView bounds].size options:0];
-            r.size.width *= strlength;
+            r = [a boundingRectWithSize:[controlView bounds].size options:0];
         }
+        else    // get width of bullets
+        {
+            NSUInteger strlength = [[passwordField stringValue] length];
+            if (strlength)
+            {
+                NSDictionary *attr = [a attributesAtIndex:0 effectiveRange:nil];
+                NSAttributedString *oneBullet = [[NSAttributedString alloc] initWithString:@"•" attributes:attr];
+                r = [oneBullet boundingRectWithSize:[controlView bounds].size options:0];
+                r.size.width *= strlength;
+            }
+        }
+        if (r.size.width) r.size.width += 5;      // extra to compensate for margin starting to left of actual text
+        
+        drawMeter(cellFrame, passwordField.strength, r.size.width);
+        drawDescriptionOfStrength(cellFrame, passwordField.strength, passwordField.descriptionOfStrength);
+
+        cellFrame.origin.y += YOFFSET;
+        cellFrame.size.height -= YOFFSET;
+
     }
-    if (r.size.width) r.size.width += 5;      // extra to compensate for margin starting to left of actual text
+    drawMatch(cellFrame, passwordField.matching);
     
-    drawMeter(cellFrame, passwordField.strength, r.size.width);
-    drawDescriptionOfStrength(cellFrame, passwordField.strength, passwordField.descriptionOfStrength);
+    return cellFrame;
 }
 
 
@@ -187,9 +213,7 @@ void drawMeterAndStrength(NSRect cellFrame, NSView *controlView)
 
 - (void)drawInteriorWithFrame:(NSRect)cellFrame inView:(NSView *)controlView
 {
-    drawMeterAndStrength(cellFrame, controlView);
-    cellFrame.origin.y += YOFFSET;
-    cellFrame.size.height -= YOFFSET;
+    cellFrame = drawAdornments(cellFrame, controlView);
     [super drawInteriorWithFrame:cellFrame inView:controlView];
 }
 
@@ -226,7 +250,7 @@ void drawMeterAndStrength(NSRect cellFrame, NSView *controlView)
 
 - (void)drawInteriorWithFrame:(NSRect)cellFrame inView:(NSView *)controlView
 {
-    drawMeterAndStrength(cellFrame, controlView);
+    drawAdornments(cellFrame, controlView);
     cellFrame.origin.y += YOFFSET;
     cellFrame.size.height -= YOFFSET;
     [super drawInteriorWithFrame:cellFrame inView:controlView];
@@ -277,6 +301,7 @@ void drawMeterAndStrength(NSRect cellFrame, NSView *controlView)
 @synthesize showStrength = _showStrength;
 @synthesize strength = _strength;
 @synthesize length = _length;
+@synthesize matching = _matching;
 @synthesize descriptionOfStrength = _descriptionOfStrength;
 
 + (Class)cellClass;
@@ -326,15 +351,7 @@ void drawMeterAndStrength(NSRect cellFrame, NSView *controlView)
 {
     _showsText = showsText;
     
-    if (self.showStrength)
-    {
-        [self swapCellForOneOfClass:(showsText ? [KSPasswordTextFieldCell class] : [KSPasswordSecureTextFieldCell class])];
-    }
-    else
-    {
-        [self swapCellForOneOfClass:(showsText ? [NSTextFieldCell class] : [NSSecureTextFieldCell class])];
-    }
-    
+    [self swapCellForOneOfClass:(showsText ? [KSPasswordTextFieldCell class] : [KSPasswordSecureTextFieldCell class])];
 }
 
 @synthesize becomesFirstResponderWhenToggled = _becomesFirstResponderWhenToggled;

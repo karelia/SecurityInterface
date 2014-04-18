@@ -26,6 +26,7 @@
 
 #import <Cocoa/Cocoa.h>
 
+typedef NS_ENUM(NSInteger, MATCHING) { HIDE_MATCH = 0, DOESNT_MATCH, PARTIAL_MATCH, FULL_MATCH };
 
 @interface KSPasswordField : NSSecureTextField <NSTextViewDelegate>
 {
@@ -35,6 +36,7 @@
     BOOL    _showStrength;
     float   _strength;
     NSUInteger _length;
+    MATCHING _matching;
     NSString *_descriptionOfStrength;
 }
 
@@ -48,6 +50,7 @@
 
 @property (nonatomic, assign) float strength;
 @property (nonatomic, assign) NSUInteger length;
+@property (nonatomic, assign) MATCHING matching;
 @property (nonatomic, copy) NSString *descriptionOfStrength;
 
 /**
