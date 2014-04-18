@@ -148,12 +148,13 @@ void drawDescriptionOfStrength(NSRect cellFrame, float strength, NSString *descr
 
 void drawMatch(NSRect cellFrame, MATCHING matching)
 {
-    NSRect drawFrame = NSMakeRect(NSMaxX(cellFrame)-16-2, 3, 16, 16);
+    NSUInteger y = NSMaxY(cellFrame) - 19;     // 22 standard => 3, 25 tall => 6
+    NSRect drawFrame = NSMakeRect(NSMaxX(cellFrame)-16-2, y, 16, 16);
     NSString *imageName = nil;
     switch (matching) {
-        case DOESNT_MATCH: imageName = NSImageNameStatusUnavailable; break;
-        case PARTIAL_MATCH: imageName = NSImageNameStatusPartiallyAvailable; break;
         case FULL_MATCH: imageName = NSImageNameStatusAvailable; break;
+        case PARTIAL_MATCH: imageName = NSImageNameStatusPartiallyAvailable; break;
+        case DOESNT_MATCH: imageName = NSImageNameStatusUnavailable; break;
         default: break;
     }
     if (imageName)
@@ -167,6 +168,7 @@ NSRect drawAdornments(NSRect cellFrame, NSView *controlView)
 {
 	NSRect result = cellFrame;
     KSPasswordField *passwordField = ((KSPasswordField*)controlView);
+    NSUInteger strlength = [[passwordField stringValue] length];
     if (passwordField.showStrength)
     {
         NSAttributedString *a = [passwordField attributedStringValue];
@@ -177,7 +179,6 @@ NSRect drawAdornments(NSRect cellFrame, NSView *controlView)
         }
         else    // get width of bullets
         {
-            NSUInteger strlength = [[passwordField stringValue] length];
             if (strlength)
             {
                 NSDictionary *attr = [a attributesAtIndex:0 effectiveRange:nil];
@@ -195,7 +196,14 @@ NSRect drawAdornments(NSRect cellFrame, NSView *controlView)
         result.size.height -= YOFFSET;
 
     }
-    drawMatch(result, passwordField.matching);
+    MATCHING matchingToShow = passwordField.matching;
+    
+    // For the main field, if there is a string not long enough, also show the not-matching indicator to indicate a problem to fix
+    if (!passwordField.showMatchIndicator && strlength > 0 && strlength < 8)
+    {
+        matchingToShow = DOESNT_MATCH;
+    }
+    drawMatch(result, matchingToShow);
     
     return result;
 }
@@ -353,6 +361,7 @@ NSRect drawAdornments(NSRect cellFrame, NSView *controlView)
 + (void)initialize
 {
     NSArray *strengthDescriptions = @[
+										@"",
                                       NSLocalizedString(@"weak", @"description of (strength of) password"),
                                       NSLocalizedString(@"fair", @"description of (strength of) password. OK but not great."),
                                       NSLocalizedString(@"strong", @"description of (strength of) password")];
@@ -593,7 +602,8 @@ NSRect drawAdornments(NSRect cellFrame, NSView *controlView)
         if (visible)
         {
             NSUInteger strengthIndex =
-                strength < 0.4 ? 0 : (strength > 0.70 ? 2 : 1);
+                strength < 0.4 ? 1 : (strength > 0.70 ? 3 : 2);
+			if ([string length] < 8) strengthIndex = 0;
             self.descriptionOfStrength = [sStrengthDescriptions objectAtIndex:strengthIndex];
         }
         [self setStrength:strength length:[string length]];
