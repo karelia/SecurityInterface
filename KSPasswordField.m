@@ -599,13 +599,14 @@ NSRect drawAdornments(NSRect cellFrame, NSView *controlView)
         
         BOOL visible = ![@"" isEqualToString:string];
         
-        if (visible)
+        NSUInteger strengthIndex = 0;
+        if (visible && [string length] >= 8)
         {
-            NSUInteger strengthIndex =
+            strengthIndex =
                 strength < 0.4 ? 1 : (strength > 0.70 ? 3 : 2);
-			if ([string length] < 8) strengthIndex = 0;
-            self.descriptionOfStrength = [sStrengthDescriptions objectAtIndex:strengthIndex];
         }
+        self.descriptionOfStrength = [sStrengthDescriptions objectAtIndex:strengthIndex];
+
         [self setStrength:strength length:[string length]];
     }
     
