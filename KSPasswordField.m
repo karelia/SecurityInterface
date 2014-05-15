@@ -109,6 +109,7 @@ void drawMeter(NSRect bounds, float strength, NSUInteger width)
                             green, 1.0, nil];
     
     NSRect rectToUse = bounds;
+    rectToUse = NSInsetRect(rectToUse, 1.0, 1.0);
     rectToUse.size.height = 5;
     
     // Gray background
