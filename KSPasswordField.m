@@ -217,16 +217,10 @@ NSRect drawAdornments(NSRect cellFrame, NSView *controlView)
 
 @implementation KSPasswordTextFieldCell
 
-// =======================================================================================================
-// =======================================================================================================
-//
-//  ALL OF THIS CODE SHOULD BE COPIED TO SECTION BELOW, AND REMAIN EQUAL.
-//
-//
-
 - (void)drawInteriorWithFrame:(NSRect)cellFrame inView:(NSView *)controlView
 {
     cellFrame = drawAdornments(cellFrame, controlView);
+    cellFrame.origin.y -= 1;
     [super drawInteriorWithFrame:cellFrame inView:controlView];
 }
 
@@ -254,7 +248,7 @@ NSRect drawAdornments(NSRect cellFrame, NSView *controlView)
     NSRect result = aRect;
     if ([((KSPasswordField *)[self controlView]) showStrength])
     {
-        result.origin.y += YOFFSET;
+        result.origin.y += YOFFSET - 1;
         result.size.height -= YOFFSET;
     }
     [super selectWithFrame:result inView: controlView editor:textObj delegate:anObject start:selStart length:selLength];
@@ -265,7 +259,7 @@ NSRect drawAdornments(NSRect cellFrame, NSView *controlView)
     NSRect result = aRect;
     if ([((KSPasswordField *)[self controlView]) showStrength])
     {
-        result.origin.y += YOFFSET;
+        result.origin.y += YOFFSET - 1;
         result.size.height -= YOFFSET;
     }
     [super editWithFrame:result inView: controlView editor:textObj delegate:anObject event: theEvent];
