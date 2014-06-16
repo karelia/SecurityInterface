@@ -155,20 +155,28 @@ void drawDescriptionOfStrength(NSRect cellFrame, float strength, NSString *descr
 
 void drawMatch(NSRect cellFrame, MATCHING matching)
 {
-    NSUInteger y = NSMaxY(cellFrame) - 19;     // 22 standard => 3, 25 tall => 6
-    NSRect drawFrame = NSMakeRect(NSMaxX(cellFrame)-16-2, y, 16, 16);
-    NSString *imageName = nil;
+    if (matching == HIDE_MATCH) return;
+
+    NSColor *fillColor = nil;
+
+    CGFloat w = 10.0;
+    NSUInteger y = NSMaxY(cellFrame) - 16;
+    NSRect drawFrame = NSMakeRect(NSMaxX(cellFrame)-w-6, y, w, w);
+
     switch (matching) {
-        case FULL_MATCH: imageName = NSImageNameStatusAvailable; break;
-        case PARTIAL_MATCH: imageName = NSImageNameStatusPartiallyAvailable; break;
-        case DOESNT_MATCH: imageName = NSImageNameStatusUnavailable; break;
+        case FULL_MATCH: fillColor = [NSColor greenColor]; break;
+        case PARTIAL_MATCH: fillColor = [NSColor yellowColor]; break;
+        case DOESNT_MATCH: fillColor = [NSColor redColor]; break;
         default: break;
     }
-    if (imageName)
-    {
-        NSImage *indicator = [NSImage imageNamed:imageName];
-        [indicator drawInRect:drawFrame fromRect:NSZeroRect operation:NSCompositeSourceOver fraction:1.0 respectFlipped:YES hints:nil];
-    }
+
+    NSBezierPath *fillPath = [NSBezierPath bezierPathWithOvalInRect:drawFrame];
+    [fillColor set];
+    [fillPath fill];
+
+    NSBezierPath *strokePath = [NSBezierPath bezierPathWithOvalInRect:NSInsetRect(drawFrame, -0.5, -0.5)];
+    [[fillColor shadowWithLevel:0.25] set];
+    [strokePath stroke];
 }
 
 NSRect drawAdornments(NSRect cellFrame, NSView *controlView)
