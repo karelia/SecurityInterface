@@ -110,7 +110,7 @@ void drawMeter(NSRect bounds, float strength, NSUInteger width)
     
     NSRect rectToUse = bounds;
     rectToUse = NSInsetRect(rectToUse, 1.0, 1.0);
-    rectToUse.size.height = 5;
+    rectToUse.size.height = 4;
 
     [NSGraphicsContext saveGraphicsState];
     [[NSGraphicsContext currentContext] setCompositingOperation:NSCompositePlusDarker];
