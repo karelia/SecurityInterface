@@ -80,10 +80,10 @@ float strengthOfPassword(NSString *proposedPassword)
 
 void drawMeter(NSRect bounds, float strength, NSUInteger width)
 {
-    NSColor *red    = [NSColor colorWithCalibratedHue:1.0 saturation:1.000 brightness:0.7 alpha:1.000];
+    NSColor *red    = [NSColor colorWithCalibratedHue:1.0 saturation:1.000 brightness:0.9 alpha:1.000];
     NSColor *yellow = [NSColor colorWithCalibratedHue:0.130 saturation:1.0 brightness:1.0 alpha:1.000];
-    NSColor *green  = [NSColor colorWithCalibratedHue:0.283 saturation:0.7 brightness:0.8 alpha:1.000];
-    NSColor *gray   = [NSColor colorWithCalibratedHue:0.672 saturation:0.06 brightness:0.85 alpha:1.000];   // slight blue tinge
+    NSColor *green  = [NSColor colorWithCalibratedHue:0.283 saturation:0.7 brightness:0.9 alpha:1.000];
+    NSColor *gray   = [NSColor colorWithCalibratedHue:0.672 saturation:0.06 brightness:0.9 alpha:1.000];   // slight blue tinge
     
     CGFloat endRed, startYellow, endYellow, startGreen;
     
@@ -111,7 +111,10 @@ void drawMeter(NSRect bounds, float strength, NSUInteger width)
     NSRect rectToUse = bounds;
     rectToUse = NSInsetRect(rectToUse, 1.0, 1.0);
     rectToUse.size.height = 5;
-    
+
+    [NSGraphicsContext saveGraphicsState];
+    [[NSGraphicsContext currentContext] setCompositingOperation:NSCompositePlusDarker];
+
     // Gray background
     [gray set];
     [NSBezierPath fillRect:rectToUse];
@@ -121,6 +124,8 @@ void drawMeter(NSRect bounds, float strength, NSUInteger width)
     rectToUse.size.width = cappedWidth;
     [gradient drawInRect:rectToUse angle:0.0];  // not enough room for rounded rect
     [gradient release];
+
+    [NSGraphicsContext restoreGraphicsState];
 }
 
 void drawDescriptionOfStrength(NSRect cellFrame, float strength, NSString *descriptionOfStrength)
