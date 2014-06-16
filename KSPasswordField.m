@@ -120,6 +120,7 @@ void drawMeter(NSRect bounds, float strength, NSUInteger width)
     CGFloat cappedWidth = MIN(rectToUse.size.width, width);
     rectToUse.size.width = cappedWidth;
     [gradient drawInRect:rectToUse angle:0.0];  // not enough room for rounded rect
+    [gradient release];
 }
 
 void drawDescriptionOfStrength(NSRect cellFrame, float strength, NSString *descriptionOfStrength)
@@ -183,7 +184,7 @@ NSRect drawAdornments(NSRect cellFrame, NSView *controlView)
             if (strlength)
             {
                 NSDictionary *attr = [a attributesAtIndex:0 effectiveRange:nil];
-                NSAttributedString *oneBullet = [[NSAttributedString alloc] initWithString:@"•" attributes:attr];
+                NSAttributedString *oneBullet = [[[NSAttributedString alloc] initWithString:@"•" attributes:attr] autorelease];
                 r = [oneBullet boundingRectWithSize:[controlView bounds].size options:0];
                 r.size.width *= strlength;
             }
