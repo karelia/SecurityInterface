@@ -159,8 +159,8 @@ void drawMatch(NSRect cellFrame, MATCHING matching)
 
     NSColor *fillColor = nil;
 
-    CGFloat w = 10.0;
-    NSUInteger y = NSMaxY(cellFrame) - 16;
+    CGFloat w = 8.0;
+    NSUInteger y = NSMaxY(cellFrame) - 15;
     NSRect drawFrame = NSMakeRect(NSMaxX(cellFrame)-w-6, y, w, w);
 
     switch (matching) {
@@ -171,8 +171,9 @@ void drawMatch(NSRect cellFrame, MATCHING matching)
     }
 
     NSBezierPath *fillPath = [NSBezierPath bezierPathWithOvalInRect:drawFrame];
-    [fillColor set];
-    [fillPath fill];
+    NSGradient *fillGradient = [[[NSGradient alloc] initWithStartingColor:[fillColor highlightWithLevel:0.15]
+                                                              endingColor:[fillColor shadowWithLevel:0.15]] autorelease];
+    [fillGradient drawInBezierPath:fillPath angle:90.0];
 
     NSBezierPath *strokePath = [NSBezierPath bezierPathWithOvalInRect:NSInsetRect(drawFrame, -0.5, -0.5)];
     [[fillColor shadowWithLevel:0.25] set];
