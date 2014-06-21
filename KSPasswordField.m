@@ -182,22 +182,26 @@ void drawMatch(NSRect cellFrame, MATCHING matching)
 
 NSRect drawAdornments(NSRect cellFrame, NSView *controlView)
 {
+    // Use field editor, not string accessors, to avoid rending problems
+    NSTextView *fieldEditor = (NSTextView *)[controlView.window fieldEditor:NO forObject:controlView];  // actuall NSSecureTextView (undocumented)
+    NSString *stringValue = [fieldEditor string];
+    NSAttributedString *attribStringValue = [fieldEditor textStorage];
+    
 	NSRect result = cellFrame;
     KSPasswordField *passwordField = ((KSPasswordField*)controlView);
-    NSUInteger strlength = [[passwordField stringValue] length];
+    NSUInteger strlength = [stringValue length];
     if (passwordField.showStrength)
     {
-        NSAttributedString *a = [passwordField attributedStringValue];
         NSRect r = NSZeroRect;
         if (passwordField.showsText)
         {
-            r = [a boundingRectWithSize:[controlView bounds].size options:0];
+            r = [attribStringValue boundingRectWithSize:[controlView bounds].size options:0];
         }
         else    // get width of bullets
         {
             if (strlength)
             {
-                NSDictionary *attr = [a attributesAtIndex:0 effectiveRange:nil];
+                NSDictionary *attr = [attribStringValue attributesAtIndex:0 effectiveRange:nil];
                 NSAttributedString *oneBullet = [[[NSAttributedString alloc] initWithString:@"•" attributes:attr] autorelease];
                 r = [oneBullet boundingRectWithSize:[controlView bounds].size options:0];
                 r.size.width *= strlength;
