@@ -215,12 +215,12 @@ NSRect drawAdornments(NSRect cellFrame, NSView *controlView)
         result.origin.y += YOFFSET;
         result.size.height -= YOFFSET;
 
-    }
-    MATCHING matchingToShow = passwordField.matching;
-    
+    }    
     // For the main field, if there is a string not long enough, also show the not-matching indicator to indicate a problem to fix
-    if (!passwordField.showMatchIndicator && strlength > 0 && strlength < 8)
-    {
+    MATCHING matchingToShow = passwordField.matching;
+    if (!passwordField.showMatchIndicator) {
+        matchingToShow = HIDE_MATCH;
+    } else if (strlength > 0 && strlength < 8) {
         matchingToShow = DOESNT_MATCH;
     }
     drawMatch(result, matchingToShow);
