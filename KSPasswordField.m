@@ -278,14 +278,6 @@ NSRect drawAdornments(NSRect cellFrame, NSView *controlView)
 
 @implementation KSPasswordSecureTextFieldCell
 
-// =======================================================================================================
-// =======================================================================================================
-//
-//  ALL OF THIS CODE SHOULD BE COPIED FROM SECTION ABOVE, AND REMAIN EQUAL.
-//
-// =======================================================================================================
-// =======================================================================================================
-
 - (void)drawInteriorWithFrame:(NSRect)cellFrame inView:(NSView *)controlView
 {
     cellFrame = drawAdornments(cellFrame, controlView);
