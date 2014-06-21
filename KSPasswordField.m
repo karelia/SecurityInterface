@@ -335,6 +335,9 @@ NSRect drawAdornments(NSRect cellFrame, NSView *controlView)
     if (self = [super initWithFrame:frameRect])
     {
         _becomesFirstResponderWhenToggled = YES;
+
+		// Don't show text by default. This needs to be called to replace the standard cell with our custom one.
+		[self setShowsText:NO];
     }
     return self;
 }
@@ -344,6 +347,9 @@ NSRect drawAdornments(NSRect cellFrame, NSView *controlView)
     if (self = [super initWithCoder:aDecoder])
     {
         _becomesFirstResponderWhenToggled = YES;
+
+		// Don't show text by default. This needs to be called to replace the standard cell with our custom one.
+		[self setShowsText:NO];
     }
     return self;
 }
