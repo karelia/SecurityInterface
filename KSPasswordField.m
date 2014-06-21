@@ -182,13 +182,15 @@ void drawMatch(NSRect cellFrame, MATCHING matching)
 
 NSRect drawAdornments(NSRect cellFrame, NSView *controlView)
 {
-    // Use field editor, not string accessors, to avoid rending problems
+    // When editing, use field editor, not string accessors, to avoid rending problems
     NSTextView *fieldEditor = (NSTextView *)[controlView.window fieldEditor:NO forObject:controlView];  // actuall NSSecureTextView (undocumented)
-    NSString *stringValue = [fieldEditor string];
-    NSAttributedString *attribStringValue = [fieldEditor textStorage];
+    if ([controlView.window firstResponder] != fieldEditor || fieldEditor.delegate != (id)controlView) fieldEditor = nil;
+
+    KSPasswordField *passwordField = (KSPasswordField *)controlView;
+    NSString *stringValue = fieldEditor ? [fieldEditor string] : [passwordField stringValue];
+    NSAttributedString *attribStringValue = fieldEditor ? [fieldEditor textStorage] : [passwordField attributedStringValue];
     
 	NSRect result = cellFrame;
-    KSPasswordField *passwordField = ((KSPasswordField*)controlView);
     NSUInteger strlength = [stringValue length];
     if (passwordField.showStrength)
     {
