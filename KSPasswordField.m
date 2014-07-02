@@ -458,7 +458,7 @@ NSRect drawAdornments(NSRect cellFrame, NSView *controlView)
     [self setCell:cell];
     [self setNeedsDisplay:YES];
     [cell release];
-    
+
     // Restore selection
     if (selection)
     {
@@ -467,7 +467,13 @@ NSRect drawAdornments(NSRect cellFrame, NSView *controlView)
     }
     else if (self.becomesFirstResponderWhenToggled)
     {
-        [self.window makeFirstResponder:self];
+        NSTextView *fieldEditor = (NSTextView *)[self.window firstResponder];
+        BOOL isEditingPassword = [fieldEditor isKindOfClass:[NSTextView class]] && [fieldEditor.delegate isKindOfClass:[KSPasswordField class]];
+
+        if (isEditingPassword)
+        {
+            [self.window makeFirstResponder:self];
+        }
     }
 }
 
