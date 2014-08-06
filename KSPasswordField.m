@@ -164,20 +164,28 @@ void drawMatch(NSRect cellFrame, MATCHING matching)
     NSRect drawFrame = NSMakeRect(NSMaxX(cellFrame)-w-6, y, w, w);
 
     switch (matching) {
-        case FULL_MATCH: fillColor = [NSColor greenColor]; break;
         case PARTIAL_MATCH: fillColor = [NSColor yellowColor]; break;
         case DOESNT_MATCH: fillColor = [NSColor redColor]; break;
         default: break;
     }
 
-    NSBezierPath *fillPath = [NSBezierPath bezierPathWithOvalInRect:drawFrame];
-    NSGradient *fillGradient = [[[NSGradient alloc] initWithStartingColor:[fillColor highlightWithLevel:0.15]
-                                                              endingColor:[fillColor shadowWithLevel:0.15]] autorelease];
-    [fillGradient drawInBezierPath:fillPath angle:90.0];
+    if (fillColor)
+    {
+        NSBezierPath *fillPath = [NSBezierPath bezierPathWithOvalInRect:drawFrame];
+        NSGradient *fillGradient = [[[NSGradient alloc] initWithStartingColor:[fillColor highlightWithLevel:0.15]
+                                                                  endingColor:[fillColor shadowWithLevel:0.15]] autorelease];
+        [fillGradient drawInBezierPath:fillPath angle:90.0];
 
-    NSBezierPath *strokePath = [NSBezierPath bezierPathWithOvalInRect:NSInsetRect(drawFrame, -0.5, -0.5)];
-    [[fillColor shadowWithLevel:0.25] set];
-    [strokePath stroke];
+        NSBezierPath *strokePath = [NSBezierPath bezierPathWithOvalInRect:NSInsetRect(drawFrame, -0.5, -0.5)];
+        [[fillColor shadowWithLevel:0.25] set];
+        [strokePath stroke];
+    }
+    if (matching == FULL_MATCH)
+    {
+        NSImage *checkmark = [NSImage imageNamed:@"checkmark"];             // This image resource should be in the app
+        NSRect checkmarkFrame = NSMakeRect(NSMaxX(cellFrame)-16-4,3,16,16);
+        [checkmark drawInRect:checkmarkFrame fromRect:NSZeroRect operation:NSCompositeSourceAtop fraction:1.0 respectFlipped:YES hints:nil];
+    }
 }
 
 NSRect drawAdornments(NSRect cellFrame, NSView *controlView)
