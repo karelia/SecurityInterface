@@ -33,6 +33,8 @@
 static NSArray *sStrengthDescriptions = nil;
 static NSUInteger sMaxStrengthDescriptionWidth = 0;
 
+NSString *MyControlDidBecomeFirstResponderNotification = @"MyControlDidBecomeFirstResponderNotification";
+
 // Returns zero (awful) to one (awesome).  We could reject low values, warn if medium values
 float strengthOfPassword(NSString *proposedPassword)
 {
@@ -238,6 +240,11 @@ NSRect drawAdornments(NSRect cellFrame, NSView *controlView)
     return result;
 }
 
+@interface NSObject(controlDidBecomeFirstResponder)
+- (void) controlDidBecomeFirstResponder:(NSNotification *)aNotification;
+@end
+
+
 @implementation KSPasswordTextFieldCell
 
 - (void)drawInteriorWithFrame:(NSRect)cellFrame inView:(NSView *)controlView
@@ -402,6 +409,17 @@ NSRect drawAdornments(NSRect cellFrame, NSView *controlView)
 }
 
 
+- (BOOL)becomeFirstResponder;
+{
+    // If the control's delegate responds to controlDidBecomeFirstResponder, invoke it. Also post a notification.
+    BOOL didBecomeFirstResponder = [super becomeFirstResponder];
+    NSNotification *notification = [NSNotification notificationWithName:MyControlDidBecomeFirstResponderNotification object:self];
+    if ( [self delegate] && [[self delegate] respondsToSelector:@selector(controlDidBecomeFirstResponder:)] ) {
+        [[self delegate] controlDidBecomeFirstResponder:notification];
+    }
+    [[NSNotificationCenter defaultCenter] postNotification:notification];
+    return didBecomeFirstResponder;
+}
 
 
 #pragma mark strength-o-meter
