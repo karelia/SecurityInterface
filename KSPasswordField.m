@@ -415,7 +415,7 @@ NSRect drawAdornments(NSRect cellFrame, NSView *controlView)
     BOOL didBecomeFirstResponder = [super becomeFirstResponder];
     NSNotification *notification = [NSNotification notificationWithName:MyControlDidBecomeFirstResponderNotification object:self];
     if ( [self delegate] && [[self delegate] respondsToSelector:@selector(controlDidBecomeFirstResponder:)] ) {
-        [[self delegate] controlDidBecomeFirstResponder:notification];
+        [((NSObject *)[self delegate]) controlDidBecomeFirstResponder:notification];
     }
     [[NSNotificationCenter defaultCenter] postNotification:notification];
     return didBecomeFirstResponder;
