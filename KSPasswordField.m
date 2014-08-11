@@ -247,11 +247,23 @@ NSRect drawAdornments(NSRect cellFrame, NSView *controlView)
 
 @implementation KSPasswordTextFieldCell
 
+@synthesize forcedPlaceholder = _forcedPlaceholder;
+
 - (void)drawInteriorWithFrame:(NSRect)cellFrame inView:(NSView *)controlView
 {
     cellFrame = drawAdornments(cellFrame, controlView);
     cellFrame.origin.y -= 1;
     [super drawInteriorWithFrame:cellFrame inView:controlView];
+    
+    // THIS SHOULD BE REPLICATED IN SAME METHODS IN KSPasswordSecureTextFieldCell, KSPasswordTextFieldCell
+    NSString *placeholder = [self forcedPlaceholder];
+    NSDictionary *attr = [NSDictionary dictionaryWithObjectsAndKeys:
+                          [NSFont systemFontOfSize:[NSFont smallSystemFontSize] - 2], NSFontAttributeName,
+                          [NSColor disabledControlTextColor], NSForegroundColorAttributeName,
+                          nil];
+    NSRect placeholderRect = cellFrame;
+    placeholderRect = NSInsetRect(placeholderRect, 6.0, 6.0);
+    [placeholder drawInRect:placeholderRect withAttributes:attr];
 }
 
 - (NSRect)drawingRectForBounds:(NSRect)aRect
@@ -299,10 +311,22 @@ NSRect drawAdornments(NSRect cellFrame, NSView *controlView)
 
 @implementation KSPasswordSecureTextFieldCell
 
+@synthesize forcedPlaceholder = _forcedPlaceholder;
+
 - (void)drawInteriorWithFrame:(NSRect)cellFrame inView:(NSView *)controlView
 {
     cellFrame = drawAdornments(cellFrame, controlView);
     [super drawInteriorWithFrame:cellFrame inView:controlView];
+
+    // THIS SHOULD BE REPLICATED IN SAME METHODS IN KSPasswordSecureTextFieldCell, KSPasswordTextFieldCell
+    NSString *placeholder = [self forcedPlaceholder];
+    NSDictionary *attr = [NSDictionary dictionaryWithObjectsAndKeys:
+                          [NSFont systemFontOfSize:[NSFont smallSystemFontSize] - 2], NSFontAttributeName,
+                          [NSColor disabledControlTextColor], NSForegroundColorAttributeName,
+                          nil];
+    NSRect placeholderRect = cellFrame;
+    placeholderRect = NSInsetRect(placeholderRect, 6.0, 6.0);
+    [placeholder drawInRect:placeholderRect withAttributes:attr];
 }
 
 - (NSRect)drawingRectForBounds:(NSRect)aRect
@@ -384,7 +408,7 @@ NSRect drawAdornments(NSRect cellFrame, NSView *controlView)
 
 + (Class)cellClass;
 {
-    return [NSSecureTextFieldCell class];       // Really just a guess; set to the right subclass from code later.
+    return [KSPasswordSecureTextFieldCell class];       // Really just a guess; set to the right subclass from code later.
 }
 
 + (void)initialize
@@ -480,6 +504,8 @@ NSRect drawAdornments(NSRect cellFrame, NSView *controlView)
     [unarchiver finishDecoding];
     [unarchiver release];
     [data release];
+    
+    [cell setValue:[self.cell valueForKey:@"forcedPlaceholder"] forKey:@"forcedPlaceholder"];       // This didn't get saved with the archive.
     
     [self setCell:cell];
     [self setNeedsDisplay:YES];
