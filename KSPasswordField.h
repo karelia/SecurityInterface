@@ -103,17 +103,7 @@ typedef NS_ENUM(NSInteger, MATCHING) { HIDE_MATCH = 0, DOESNT_MATCH, PARTIAL_MAT
 
 
 @interface KSPasswordTextFieldCell : NSTextFieldCell
-{
-    NSString *_forcedPlaceholder;
-}
-@property (nonatomic, copy) NSString *forcedPlaceholder;
-
 @end
 
 @interface KSPasswordSecureTextFieldCell : NSSecureTextFieldCell
-{
-    NSString *_forcedPlaceholder;
-}
-@property (nonatomic, copy) NSString *forcedPlaceholder;
-
 @end
