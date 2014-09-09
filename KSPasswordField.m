@@ -25,60 +25,17 @@
 //
 
 #import "KSPasswordField.h"
+#import "NSData+Karelia.h"
 
 #define YOFFSET 2
 #define STRENGTH_INSET 4
 
 
 static NSArray *sStrengthDescriptions = nil;
+static NSSet *sPasswordBlacklist = nil;
 static NSUInteger sMaxStrengthDescriptionWidth = 0;
 
 NSString *MyControlDidBecomeFirstResponderNotification = @"MyControlDidBecomeFirstResponderNotification";
-
-// Returns zero (awful) to one (awesome).  We could reject low values, warn if medium values
-float strengthOfPassword(NSString *proposedPassword)
-{
-    NSUInteger length = [proposedPassword length];  // the longer the better
-    // Not going to use enumerateSubstringsInRange with NSStringEnumerationByComposedCharacterSequences
-    // since I just want a quick and dirty measurement, and it's easier to check character-by-character
-    
-    NSUInteger numberOfLowercase = 0;
-    NSUInteger numberOfUppercase = 0;
-    NSUInteger numberOfDecimalDigit = 0;
-    NSUInteger numberOfOther = 0;
-    for (NSUInteger i = 0 ; i < length ; i++)
-    {
-        unichar aChar = [proposedPassword characterAtIndex:i];
-        if ([[NSCharacterSet lowercaseLetterCharacterSet] characterIsMember:aChar])
-        {
-            numberOfLowercase++;
-        }
-        else if ([[NSCharacterSet uppercaseLetterCharacterSet] characterIsMember:aChar])
-        {
-            numberOfUppercase++;
-        }
-        else if ([[NSCharacterSet decimalDigitCharacterSet] characterIsMember:aChar])
-        {
-            numberOfDecimalDigit++;
-        }
-        else
-        {
-            numberOfOther++;
-        }
-    }
-    NSUInteger diversity = 0;   // We'll find if it has lower-alpha, upper alpha, numeric, and other
-    if (numberOfLowercase)      diversity++;
-    if (numberOfUppercase)      diversity++;
-    if (numberOfDecimalDigit)   diversity++;
-    if (numberOfOther)          diversity++;
-    
-    // Now here's the big emperical formula, devised so that the more diverse and the longer,
-    // the better the rating.  An 8-character password with diversity of 4 is right in the middle.
-    // It's possible to have a good strength with low diversity ONLY if the password is hecka long.
-    
-    float strength = MIN(1.0f, 0.015625f * diversity * length);
-    return strength;
-}
 
 void drawMeter(NSRect bounds, float strength, NSUInteger width)
 {
@@ -390,12 +347,18 @@ NSRect drawAdornments(NSRect cellFrame, NSView *controlView)
 + (void)initialize
 {
     NSArray *strengthDescriptions = @[
-										@"",
-                                      NSLocalizedString(@"weak", @"description of (strength of) password"),
-                                      NSLocalizedString(@"fair", @"description of (strength of) password. OK but not great."),
-                                      NSLocalizedString(@"strong", @"description of (strength of) password")];
+										@"",        // don't show any status yet
+                                        NSLocalizedString(@"insecure", @"description of (strength of) password. SHOULD BE A VERY SHORT WORD!"),
+                                        NSLocalizedString(@"weak", @"description of (strength of) password. SHOULD BE A VERY SHORT WORD!"),
+                                      NSLocalizedString(@"fair", @"description of (strength of) password. OK but not great. SHOULD BE A VERY SHORT WORD!"),
+                                      NSLocalizedString(@"strong", @"description of (strength of) password. SHOULD BE A VERY SHORT WORD!")];
     sStrengthDescriptions = [strengthDescriptions retain];
     
+    // Load in the password blacklist file
+    NSURL *blacklistURL = [[NSBundle mainBundle] URLForResource:@"blacklist" withExtension:@"plist"];
+    NSArray *blacklistArray = [[[NSArray alloc] initWithContentsOfURL:blacklistURL] autorelease];
+    sPasswordBlacklist = [[NSSet alloc] initWithArray:blacklistArray];
+
     
     NSDictionary *attr = [NSDictionary dictionaryWithObjectsAndKeys:
                           [NSFont systemFontOfSize:[NSFont smallSystemFontSize]], NSFontAttributeName,
@@ -601,9 +564,8 @@ NSRect drawAdornments(NSRect cellFrame, NSView *controlView)
                                       }];
     if ( [proposedPassword length] >= 12 && (float)[allChars count] / (float)[proposedPassword length] > 0.4 )
     {
-        diversity++;
+        diversity++;        // Give it an extra point if there is a variety of characters
     }
-    
     if (NSClassFromString(@"NSRegularExpression"))      // 10.7 up, so ignore if not on 10.7)
     {
         // Look for repetition: 4 or more characters, repeated - if so, reduce the diversity
@@ -646,10 +608,18 @@ NSRect drawAdornments(NSRect cellFrame, NSView *controlView)
         BOOL visible = ![@"" isEqualToString:string];
         
         NSUInteger strengthIndex = 0;
-        if (visible && [string length] >= 8)
+        if (visible)
         {
-            strengthIndex =
-                strength < 0.4 ? 1 : (strength > 0.70 ? 3 : 2);
+            if ([string length] >= 8 && ![sPasswordBlacklist containsObject:string])
+            {
+                strengthIndex =
+                    strength < 0.4 ? 2 : (strength > 0.70 ? 4 : 3);
+            }
+            else
+            {
+                strengthIndex = 1;      // insecure
+            }
+            
         }
         self.descriptionOfStrength = [sStrengthDescriptions objectAtIndex:strengthIndex];
 
