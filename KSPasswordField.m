@@ -308,6 +308,20 @@ NSRect drawAdornments(NSRect cellFrame, NSView *controlView)
 
 @implementation KSPasswordField
 
+
+-(BOOL)textView:(NSTextView *)aTextView doCommandBySelector: (SEL)aSelector
+{
+    if (aSelector == @selector(moveDown:))
+    {
+        if ([self delegate] && [[self delegate] respondsToSelector:aSelector])
+        {
+            [((NSResponder *)[self delegate]) moveDown:self];
+            return YES;
+        }
+    }
+    return NO;
+}
+
 - (id)initWithFrame:(NSRect)frameRect;
 {
     if (self = [super initWithFrame:frameRect])
