@@ -363,6 +363,8 @@ NSRect drawAdornments(NSRect cellFrame, NSView *controlView)
     NSArray *strengthDescriptions = @[
                                   
                                       // TODO: How about "too common" for when the password is in a blacklist?
+                                      //NSLocalizedString(@"too common", @"description of (strength of) password. SHOULD BE A VERY SHORT WORD/PHRASE!"),
+                                      //NSLocalizedString(@"too short", @"description of (strength of) password. SHOULD BE A VERY SHORT WORD/PHRASE!"),
 
 										@"",        // don't show any status yet
                                         NSLocalizedString(@"insecure", @"description of (strength of) password. SHOULD BE A VERY SHORT WORD!"),
