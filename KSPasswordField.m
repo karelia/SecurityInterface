@@ -32,7 +32,7 @@
 
 
 static NSArray *sStrengthDescriptions = nil;
-static NSSet *sPasswordBlacklist = nil;
+static NSSet *sPasswordBlacklist = nil;         // Worst ones
 static NSUInteger sMaxStrengthDescriptionWidth = 0;
 
 NSString *MyControlDidBecomeFirstResponderNotification = @"MyControlDidBecomeFirstResponderNotification";
@@ -348,6 +348,7 @@ NSRect drawAdornments(NSRect cellFrame, NSView *controlView)
 
 @synthesize showStrength = _showStrength;
 @synthesize showMatchIndicator = _showMatchIndicator;
+@synthesize passwordMeter = _passwordMeter;;
 @synthesize strength = _strength;
 @synthesize length = _length;
 @synthesize matching = _matching;
@@ -361,16 +362,13 @@ NSRect drawAdornments(NSRect cellFrame, NSView *controlView)
 + (void)initialize
 {
     NSArray *strengthDescriptions = @[
-                                  
-                                      // TODO: How about "too common" for when the password is in a blacklist?
-                                      //NSLocalizedString(@"too common", @"description of (strength of) password. SHOULD BE A VERY SHORT WORD/PHRASE!"),
-                                      //NSLocalizedString(@"too short", @"description of (strength of) password. SHOULD BE A VERY SHORT WORD/PHRASE!"),
-
-										@"",        // don't show any status yet
-                                        NSLocalizedString(@"insecure", @"description of (strength of) password. SHOULD BE A VERY SHORT WORD!"),
-                                        NSLocalizedString(@"weak", @"description of (strength of) password. SHOULD BE A VERY SHORT WORD!"),
-                                      NSLocalizedString(@"fair", @"description of (strength of) password. OK but not great. SHOULD BE A VERY SHORT WORD!"),
-                                      NSLocalizedString(@"strong", @"description of (strength of) password. SHOULD BE A VERY SHORT WORD!")];
+        @"",        // don't show any status yet
+        NSLocalizedString(@"too common", @"description of (strength of) password. SHOULD BE A VERY SHORT WORD/PHRASE!"),
+        NSLocalizedString(@"too short", @"description of (strength of) password. SHOULD BE A VERY SHORT WORD/PHRASE!"),
+        NSLocalizedString(@"insecure", @"description of (strength of) password. SHOULD BE A VERY SHORT WORD!"),
+        NSLocalizedString(@"weak", @"description of (strength of) password. SHOULD BE A VERY SHORT WORD!"),
+        NSLocalizedString(@"fair", @"description of (strength of) password. OK but not great. SHOULD BE A VERY SHORT WORD!"),
+        NSLocalizedString(@"strong", @"description of (strength of) password. SHOULD BE A VERY SHORT WORD!")];
     sStrengthDescriptions = [strengthDescriptions retain];
     
     // Load in the password blacklist file
@@ -617,30 +615,41 @@ NSRect drawAdornments(NSRect cellFrame, NSView *controlView)
     return strength;
 }
 
+- (BOOL) strongEnough;
+{
+    return self.passwordMeter >= MeterInsecure;
+}
+
 - (void)textDidChange:(NSNotification *)aNotification
 {
     if (self.showStrength)
     {
         NSString    *string = [self stringValue];
-        float strength = [self strengthOfPassword:string];
+        float strength = [self strengthOfPassword:string];      // zero to one
         
         BOOL visible = ![@"" isEqualToString:string];
         
-        NSUInteger strengthIndex = 0;
+        PasswordMeter passwordMeter = MeterEmpty;
         if (visible)
         {
-            if ([string length] >= 8 && ![sPasswordBlacklist containsObject:string])
+            if ([string length] < 8)
             {
-                strengthIndex =
-                    strength < 0.4 ? 2 : (strength > 0.70 ? 4 : 3);
+                passwordMeter = MeterShort;
+            }
+            else if ([sPasswordBlacklist containsObject:string])
+            {
+                passwordMeter = MeterCommon;		// Don't let super-common password be chosen
             }
             else
             {
-                strengthIndex = 1;      // insecure
+                      if (strength < 0.25)  { passwordMeter = MeterInsecure; }
+                 else if (strength < 0.4)   { passwordMeter = MeterWeak; }
+                 else if (strength < 0.70)  { passwordMeter = MeterFair; }
+                 else                       { passwordMeter = MeterStrong; }
             }
-            
         }
-        self.descriptionOfStrength = [sStrengthDescriptions objectAtIndex:strengthIndex];
+        self.passwordMeter = passwordMeter;
+        self.descriptionOfStrength = [sStrengthDescriptions objectAtIndex:passwordMeter];
 
         [self setStrength:strength length:[string length]];
     }
