@@ -627,7 +627,7 @@ NSRect drawAdornments(NSRect cellFrame, NSView *controlView)
         NSString    *string = [self stringValue];
         float strength = [self strengthOfPassword:string];      // zero to one
         
-        BOOL visible = ![@"" isEqualToString:string];
+        BOOL visible = string.length > 0;
         
         PasswordMeter passwordMeter = MeterEmpty;
         if (visible)
